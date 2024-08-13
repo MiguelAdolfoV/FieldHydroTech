@@ -1,0 +1,6 @@
+<!-- res/drawable/scrollbar_track_horizontal.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <size android:height="8dp"/> <!-- Tamaño del track -->
+    <solid android:color="@color/scrollbar_track_color"/> <!-- Color del track -->
+    <corners android:radius="4dp"/> <!-- Radio de las esquinas -->
+</shape>

@@ -1,0 +1,6 @@
+<resources>
+    <!-- Define el color personalizado de la ProgressBar -->
+    <style name="CustomProgressBar" parent="Widget.AppCompat.ProgressBar">
+        <item name="android:indeterminateTint">@color/primary_color</item>
+    </style>
+</resources>

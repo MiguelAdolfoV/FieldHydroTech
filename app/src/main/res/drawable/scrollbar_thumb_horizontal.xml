@@ -1,0 +1,6 @@
+<!-- res/drawable/scrollbar_thumb_horizontal.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <size android:height="8dp"/> <!-- Tamaño del thumb -->
+    <solid android:color="@color/scrollbar_thumb_color"/> <!-- Color del thumb -->
+    <corners android:radius="4dp"/> <!-- Radio de las esquinas -->
+</shape>

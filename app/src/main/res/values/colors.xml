@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="toolbar_color">#184749</color>
+    <color name="primary_color">#00959E</color>
+    <color name="primary_dark">#184749</color>
+    <color name="red">#FF0000</color>
+    <color name="horizontal_scroll_color">#B4EBEE</color>
+    <color name="text_color">#184749</color>
+    <color name="subtitle_color">#73B9BD</color>
+    <color name="scrollbar_thumb_color">#136F74</color>
+    <color name="scrollbar_track_color">#73B9BD</color>
+    <color name="baterry_high_color">#64DD17</color>
+    <color name="baterry_medium_color">#FFD600</color>
+    <color name="baterry_low_color">#D50000</color>
+    <color name="baterry_dead_color">#8F8F8F</color>
+</resources>
