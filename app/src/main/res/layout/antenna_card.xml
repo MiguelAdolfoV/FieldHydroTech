@@ -47,8 +47,9 @@
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/antennaLineChart"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_width="350dp"
+                android:layout_height="180dp"
+                android:layout_margin="10dp"/>
 
         </LinearLayout>
 

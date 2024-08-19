@@ -40,6 +40,13 @@
                     android:gravity="end|center_vertical"
                     android:orientation="horizontal">
 
+                    <TextView
+                        android:id="@+id/weatherTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="olas"
+                        android:textColor="@color/white" />
+
                     <RelativeLayout
                         android:layout_width="50dp"
                         android:layout_height="50dp"

@@ -29,6 +29,8 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
 
     private val mqttAndroidClient = MqttAndroidClient(context, serverUri, clientId)
 
+    private var mqttDataListener: MqttDataListener? = null
+
     init {
         mqttAndroidClient.setCallback(object : MqttCallbackExtended {
             override fun connectComplete(reconnect: Boolean, serverURI: String) {
@@ -49,6 +51,10 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
             override fun deliveryComplete(token: IMqttDeliveryToken) {}
         })
         connect()
+    }
+
+    fun setMqttDataListener(listener: MqttDataListener) {
+        mqttDataListener = listener
     }
 
     private fun connect() {
@@ -116,22 +122,23 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
         // Obtener todas las direcciones MAC de la base de datos
         val registeredMacAddresses = dbHelper.getAllMacAddresses()
 
-    // Filtrar el mensaje basado en la dirección MAC
+        // Filtrar el mensaje basado en la dirección MAC
         if (registeredMacAddresses.contains(macAddress)) {
             Log.d("Mqtt", "Mac Found")
             // Insertar el valor convertido de data en la base de datos
             val success = dbHelper.insertLog(macAddress, dateTime, dataValue)
             if (success) {
                 Log.d("Mqtt", "Data Saved: $dataValue")
+                mqttDataListener?.onDataReceived() // Notificar que se han guardado nuevos datos
             } else {
                 Log.d("Mqtt", "Data Error: $dataValue")
             }
         }
     }
 
-
     private fun convertBsEuiToMac(bsEui: Long): String {
-        return String.format("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
+        return String.format(
+            "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
             (bsEui shr 56) and 0xFF,
             (bsEui shr 48) and 0xFF,
             (bsEui shr 40) and 0xFF,
@@ -139,7 +146,8 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
             (bsEui shr 24) and 0xFF,
             (bsEui shr 16) and 0xFF,
             (bsEui shr 8) and 0xFF,
-            bsEui and 0xFF)
+            bsEui and 0xFF
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -156,6 +164,10 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
             stringBuilder.append(asciiValue.toChar())
         }
         return stringBuilder.toString().toInt()
+    }
+
+    interface MqttDataListener {
+        fun onDataReceived()
     }
 }
 

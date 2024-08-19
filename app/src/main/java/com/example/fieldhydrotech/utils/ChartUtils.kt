@@ -82,12 +82,13 @@ class ChartUtils(private val context: Context, private val dbHelper: DatabaseHel
             entries.add(BarEntry(index.toFloat(), average.toFloat()))
         }
 
-        val dataSet = BarDataSet(entries, "Weekly Data")
+        val dataSet = BarDataSet(entries, "Humidity")
         dataSet.color = ContextCompat.getColor(context, R.color.primary_color)
         val barData = BarData(dataSet)
 
         barChart.data = barData
         barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.labelCount = 7 // Asegura 7 columnas en la cuadrícula
         barChart.invalidate()
 
         return true
@@ -126,12 +127,13 @@ class ChartUtils(private val context: Context, private val dbHelper: DatabaseHel
             entries.add(BarEntry(index.toFloat(), average.toFloat()))
         }
 
-        val dataSet = BarDataSet(entries, "Daily Data")
+        val dataSet = BarDataSet(entries, "Humidity")
         dataSet.color = ContextCompat.getColor(context, R.color.primary_color)
         val barData = BarData(dataSet)
 
         barChart.data = barData
         barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.labelCount = 24 // Asegura 24 columnas en la cuadrícula
         barChart.invalidate()
 
         return true
@@ -174,12 +176,13 @@ class ChartUtils(private val context: Context, private val dbHelper: DatabaseHel
             entries.add(BarEntry(index.toFloat(), average.toFloat()))
         }
 
-        val dataSet = BarDataSet(entries, "Monthly Data")
+        val dataSet = BarDataSet(entries, "Humidity")
         dataSet.color = ContextCompat.getColor(context, R.color.primary_color)
         val barData = BarData(dataSet)
 
         barChart.data = barData
         barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.labelCount = 4 // Asegura 4 columnas en la cuadrícula
         barChart.invalidate()
 
         return true

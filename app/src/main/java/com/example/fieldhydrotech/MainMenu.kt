@@ -27,7 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainMenu : AppCompatActivity() {
+class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
     private var temporal = 1 // Variable para simular si hay datos o no
     private lateinit var dbHelper: DatabaseHelper
@@ -42,13 +42,14 @@ class MainMenu : AppCompatActivity() {
     private lateinit var testDataInserter: TestDataInserter
     private lateinit var mqttHelper: MqttHelper
     private lateinit var recyclerView: RecyclerView
+    private lateinit var antennaAdapter: AntennaAdapter
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval = 30000L // 30 segundos
 
     private val updateRunnable = object : Runnable {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun run() {
-            loadRecyclerViewData()
+            loadChartData()
             handler.postDelayed(this, updateInterval)
         }
     }
@@ -76,8 +77,16 @@ class MainMenu : AppCompatActivity() {
         notificationUtils = NotificationUtils()
         testDataInserter = TestDataInserter(dbHelper)
 
-        // Iniciar el servicio MQTT
-        mqttHelper = MqttHelper(this, dbHelper)
+        // Iniciar el servicio MQTT y establecer el listener
+        mqttHelper = MqttHelper(this, dbHelper).apply {
+            setMqttDataListener(this@MainMenu)
+        }
+
+        // Configurar RecyclerView y Adapter
+        recyclerView = findViewById(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        antennaAdapter = AntennaAdapter(mutableListOf())
+        recyclerView.adapter = antennaAdapter
 
         // Cargar datos de las gráficas
         loadChartData()
@@ -102,10 +111,6 @@ class MainMenu : AppCompatActivity() {
             temporal++
         }
 
-        // Configurar RecyclerView
-        recyclerView = findViewById(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
         // Cargar datos en el RecyclerView
         loadRecyclerViewData()
 
@@ -118,7 +123,7 @@ class MainMenu : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val antennaList = dbHelper.getAntennasWithLogs()
             withContext(Dispatchers.Main) {
-                recyclerView.adapter = AntennaAdapter(antennaList)
+                antennaAdapter.updateData(antennaList)
             }
         }
     }
@@ -158,6 +163,13 @@ class MainMenu : AppCompatActivity() {
                     monthlyBarChart.visibility = View.GONE
                 }
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onDataReceived() {
+        runOnUiThread {
+            loadRecyclerViewData()
         }
     }
 
