@@ -2,17 +2,25 @@ package com.example.fieldhydrotech
 
 import AntennaAdapter
 import MqttHelper
+import WeatherIconUtils
+import WeatherUtils
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,7 +37,7 @@ import kotlinx.coroutines.withContext
 
 class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
-    private var temporal = 1 // Variable para simular si hay datos o no
+    private var temporal = 1
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var weeklyBarChart: BarChart
     private lateinit var dailyBarChart: BarChart
@@ -43,14 +51,28 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
     private lateinit var mqttHelper: MqttHelper
     private lateinit var recyclerView: RecyclerView
     private lateinit var antennaAdapter: AntennaAdapter
+
+    // Weather components
+    private lateinit var weatherTextView: TextView
+    private lateinit var weatherImageView: ImageView
+    private lateinit var weatherUtil: WeatherUtils
+    private val weatherIconUtils = WeatherIconUtils(this)
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval = 30000L // 30 segundos
+    private val weatherUpdateInterval = 10 * 60 * 1000L // 10 minutos
 
     private val updateRunnable = object : Runnable {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun run() {
             loadChartData()
             handler.postDelayed(this, updateInterval)
+        }
+    }
+
+    private val weatherUpdateRunnable = object : Runnable {
+        override fun run() {
+            updateWeatherData()
+            handler.postDelayed(this, weatherUpdateInterval)
         }
     }
 
@@ -76,6 +98,11 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         chartUtils = ChartUtils(this, dbHelper)
         notificationUtils = NotificationUtils()
         testDataInserter = TestDataInserter(dbHelper)
+
+        // Weather components
+        weatherTextView = findViewById(R.id.weather_text_view)
+        weatherImageView = findViewById(R.id.weather_image_view)
+        weatherUtil = WeatherUtils(this, "e81ea761176beda5398782787bb02340") // Reemplaza con tu API Key
 
         // Iniciar el servicio MQTT y establecer el listener
         mqttHelper = MqttHelper(this, dbHelper).apply {
@@ -116,6 +143,39 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
         // Iniciar la actualización periódica
         handler.post(updateRunnable)
+
+        // Check and update weather
+        checkLocationPermission()
+        handler.post(weatherUpdateRunnable)
+    }
+
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            Log.d("MainMenu", "checkLocationPermission: Requesting location permission")
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
+            )
+        } else {
+            Log.d("MainMenu", "checkLocationPermission: Permission already granted")
+            updateWeatherData()
+        }
+    }
+
+    private fun updateWeatherData() {
+        Log.d("MainMenu", "updateWeatherData: Fetching weather data")
+        weatherUtil.getWeatherData { weatherResponse ->
+            weatherResponse?.let {
+                Log.d("MainMenu", "updateWeatherData: Weather data received: ${it.main.temp}°C, ${it.weather[0].description}")
+                weatherTextView.text = "Temp: ${it.main.temp}°C\n${it.weather[0].description}"
+                weatherIconUtils.setWeatherIcon(weatherResponse.weather[0].description, weatherImageView)
+            } ?: run {
+                Log.e("MainMenu", "updateWeatherData: Failed to obtain weather data")
+                weatherTextView.text = "Internet/Location is off"
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -166,6 +226,21 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                Log.d("MainMenu", "onRequestPermissionsResult: Location permission granted")
+                updateWeatherData()
+            } else {
+                Log.e("MainMenu", "onRequestPermissionsResult: Location permission denied")
+                weatherTextView.text = "Location isn't permitted"
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onDataReceived() {
         runOnUiThread {
@@ -175,6 +250,12 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("MainMenu", "onDestroy: Removing update handler callbacks")
         handler.removeCallbacks(updateRunnable)
+        handler.removeCallbacks(weatherUpdateRunnable)
+    }
+
+    companion object {
+        private const val REQUEST_LOCATION_PERMISSION = 1
     }
 }
