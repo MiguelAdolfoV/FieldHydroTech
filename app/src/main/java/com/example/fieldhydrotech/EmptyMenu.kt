@@ -1,5 +1,7 @@
 package com.example.fieldhydrotech
 
+import Notification
+import NotificationManager
 import WeatherIconUtils
 import WeatherUtils
 import android.Manifest
@@ -9,9 +11,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +23,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.example.fieldhydrotech.repo.DatabaseHelper
-import com.google.android.material.navigation.NavigationView
 
 class EmptyMenu : AppCompatActivity() {
 
@@ -30,7 +31,8 @@ class EmptyMenu : AppCompatActivity() {
     private lateinit var weatherTextView: TextView
     private lateinit var weatherImageView: ImageView
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var navigationView: NavigationView
+    private lateinit var notificationManager: NotificationManager
+    private lateinit var notificationContainer: LinearLayout
 
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval = 10 * 60 * 1000L // 10 minutos en milisegundos
@@ -61,9 +63,12 @@ class EmptyMenu : AppCompatActivity() {
         weatherUtil = WeatherUtils(this, "e81ea761176beda5398782787bb02340") // Reemplaza con tu API Key
 
         drawerLayout = findViewById(R.id.drawer_layout)
-        navigationView = findViewById(R.id.navigation_view)
+        notificationContainer = findViewById(R.id.notification_container)
         weatherTextView = findViewById(R.id.weather_text_view)
         weatherImageView = findViewById(R.id.weather_image_view)
+
+        // Inicializar NotificationManager con el contenedor de notificaciones
+        notificationManager = NotificationManager(this, notificationContainer)
 
         val largeAddButton = findViewById<Button>(R.id.large_add_button)
         val notificationButton = findViewById<Button>(R.id.toolbar_notification_button)
@@ -74,18 +79,32 @@ class EmptyMenu : AppCompatActivity() {
         }
 
         notificationButton.setOnClickListener {
-            if (drawerLayout.isDrawerOpen(navigationView)) {
-                drawerLayout.closeDrawer(navigationView)
-            } else {
-                drawerLayout.openDrawer(navigationView)
-            }
+            toggleDrawer()
         }
 
-        customizeMenuItems()
+        createNotifications()
 
         checkLocationPermission()
 
         handler.post(weatherUpdateRunnable)
+    }
+
+    private fun createNotifications() {
+        notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, "Antenna Successfully registered"))
+        notificationManager.addNotification(Notification(R.drawable.plant_flooded_solid, "Saturated Soil"))
+        notificationManager.addNotification(Notification(R.drawable.plant_dry_solid, "Dry Soil"))
+        notificationManager.addNotification(Notification(R.drawable.battery_quarter_solid, "Low Battery"))
+        notificationManager.addNotification(Notification(R.drawable.rain_notification, "Rain Warning"))
+        notificationManager.addNotification(Notification(R.drawable.warning_notification, "Weather Warning"))
+        notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid_warning, "Antenna Previously Registered"))
+    }
+
+    private fun toggleDrawer() {
+        if (drawerLayout.isDrawerOpen(findViewById(R.id.notification_drawer))) {
+            drawerLayout.closeDrawer(findViewById(R.id.notification_drawer))
+        } else {
+            drawerLayout.openDrawer(findViewById(R.id.notification_drawer))
+        }
     }
 
     private fun checkLocationPermission() {
@@ -115,32 +134,6 @@ class EmptyMenu : AppCompatActivity() {
                 weatherTextView.text = "Internet/Location is off"
             }
         }
-    }
-
-    private fun customizeMenuItems() {
-        val menu = navigationView.menu
-
-        // Personalizar el primer item
-        val menuItemOne = menu.findItem(R.id.nav_item_one)
-        val actionViewOne = LayoutInflater.from(this).inflate(R.layout.notification_item, null)
-        val iconOne = actionViewOne.findViewById<ImageView>(R.id.item_icon)
-        val titleOne = actionViewOne.findViewById<TextView>(R.id.item_title)
-
-        iconOne.setImageResource(R.drawable.tower_broadcast_solid) // Configura el icono que quieras
-        titleOne.text = "This is a custom notification"
-
-        menuItemOne.actionView = actionViewOne
-
-        // Personalizar el segundo item
-        val menuItemTwo = menu.findItem(R.id.nav_item_two)
-        val actionViewTwo = LayoutInflater.from(this).inflate(R.layout.notification_item, null)
-        val iconTwo = actionViewTwo.findViewById<ImageView>(R.id.item_icon)
-        val titleTwo = actionViewTwo.findViewById<TextView>(R.id.item_title)
-
-        iconTwo.setImageResource(R.drawable.seedling_solid) // Configura el icono que quieras
-        titleTwo.text = "Another custom notification"
-
-        menuItemTwo.actionView = actionViewTwo
     }
 
     override fun onRequestPermissionsResult(

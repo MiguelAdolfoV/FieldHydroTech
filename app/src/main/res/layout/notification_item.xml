@@ -1,26 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="16dp">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:backgroundTint="@color/white"
+    app:cardCornerRadius="12dp"
+    android:layout_margin="5dp">
 
-    <ImageView
-        android:id="@+id/item_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_gravity="center_vertical"
-        android:contentDescription="olas sou la desiicpricion queiroo que se fea lde a maderes ao en "
-        android:src="@drawable/tower_broadcast_solid"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="16dp">
+        <TextView
+            android:id="@+id/item_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="16dp"
+            android:text="Nodification description - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin"
+            android:textColor="@android:color/black"
+            android:textSize="12dp"/>
 
-    <TextView
-        android:id="@+id/item_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="16dp"
-        android:text="Notification Title"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"/>
+        <ImageView
+            android:id="@+id/item_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/tower_broadcast_solid"/>
 
-</LinearLayout>
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

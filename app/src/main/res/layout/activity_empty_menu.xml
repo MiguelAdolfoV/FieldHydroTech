@@ -214,15 +214,39 @@
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
-    <!-- Drawer -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/navigation_view"
+    <!-- Drawer con contenedor de notificaciones -->
+    <LinearLayout
+        android:id="@+id/notification_drawer"
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
-        android:background="@color/white"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/navigation_header"
-        app:menu="@menu/navigation_menu" />
+        android:orientation="vertical"
+        android:gravity="start"
+        android:background="@color/horizontal_scroll_color">
 
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/primary_color">
+
+            <TextView
+                android:id="@+id/header_title"
+                android:layout_marginTop="15dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notifications"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/notification_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="16dp"/>
+    </LinearLayout>
 </androidx.drawerlayout.widget.DrawerLayout>

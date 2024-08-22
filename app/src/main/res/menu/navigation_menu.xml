@@ -1,8 +1,6 @@
+<!-- res/menu/navigation_menu.xml -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Define empty items, as titles will be handled via custom views -->
     <item
-        android:id="@+id/nav_item_one"
-        android:title="Item One"/>
-    <item
-        android:id="@+id/nav_item_two"
-        android:title="Item Two"/>
+        android:id="@+id/nav_item_one"/>
 </menu>
