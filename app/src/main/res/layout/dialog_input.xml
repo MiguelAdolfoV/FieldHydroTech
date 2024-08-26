@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <!-- Custom Title -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name your Antenna"
+        android:textSize="20sp"
+        android:textColor="@color/text_color"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- EditText for input -->
+    <EditText
+        android:id="@+id/editTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/primary_color"
+        android:textCursorDrawable="@color/primary_color"
+        android:textColor="@color/text_color"
+        android:hint="Enter name" />
+
+    <!-- Buttons Layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="end"
+        android:layout_marginTop="16dp">
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/buttonSave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="Save"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Cancel Button -->
+        <Button
+            android:id="@+id/buttonCancel"
+            android:textColor="@color/white"
+            android:layout_width="wrap_content"
+            android:backgroundTint="@color/primary_dark"
+            android:layout_height="wrap_content"
+            android:text="Cancel" />
+    </LinearLayout>
+
+</LinearLayout>

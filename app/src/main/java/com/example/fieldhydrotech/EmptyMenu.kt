@@ -6,16 +6,19 @@ import WeatherIconUtils
 import WeatherUtils
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -23,6 +26,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.example.fieldhydrotech.repo.DatabaseHelper
+import com.example.fieldhydrotech.utils.QRCodeScannerUtils
 
 class EmptyMenu : AppCompatActivity() {
 
@@ -33,6 +37,9 @@ class EmptyMenu : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationContainer: LinearLayout
+
+
+    private var qrResult: String? = null // Variable para almacenar el resultado del QR
 
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval = 10 * 60 * 1000L // 10 minutos en milisegundos
@@ -47,10 +54,9 @@ class EmptyMenu : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()
         setContentView(R.layout.activity_empty_menu)
-
-        Log.d("EmptyMenu", "onCreate: Initializing EmptyMenu")
 
         // Configurar la interfaz de usuario para manejar los insets de sistema
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -74,8 +80,7 @@ class EmptyMenu : AppCompatActivity() {
         val notificationButton = findViewById<Button>(R.id.toolbar_notification_button)
 
         largeAddButton.setOnClickListener {
-            Log.d("EmptyMenu", "largeAddButton: Navigating to MainMenu")
-            navigateToMainMenu()
+            QRCodeScannerUtils.startQRScanner(this)
         }
 
         notificationButton.setOnClickListener {
@@ -163,7 +168,72 @@ class EmptyMenu : AppCompatActivity() {
         handler.removeCallbacks(weatherUpdateRunnable)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        QRCodeScannerUtils.handleActivityResult(requestCode, resultCode, data) { qrContent ->
+            if (qrContent != null) {
+                // Guardar el resultado del QR
+                qrResult = qrContent
+                // Mostrar el diálogo de entrada
+                showInputDialog()
+            } else {
+                Log.d("QRCodeScanner", "QR scan cancelled or failed.")
+            }
+        }
+    }
+
+    private fun showInputDialog() {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_input, null)
+        builder.setView(dialogView)
+
+        val alertDialog = builder.create()
+
+        // Mostrar el diálogo
+        alertDialog.show()
+
+        // Configurar los botones del diálogo
+        val saveButton = dialogView.findViewById<Button>(R.id.buttonSave)
+        val cancelButton = dialogView.findViewById<Button>(R.id.buttonCancel)
+
+        // Manejar el clic del botón "Save"
+        saveButton.setOnClickListener {
+            val editText = dialogView.findViewById<EditText>(R.id.editTextInput)
+            val inputValue = editText.text.toString()
+            qrResult?.let { qr ->
+                handleInput(qr, inputValue)
+            }
+            alertDialog.dismiss()
+        }
+
+        // Manejar el clic del botón "Cancel"
+        cancelButton.setOnClickListener {
+            alertDialog.dismiss()
+        }
+
+        // Cambiar el color de fondo programáticamente (si es necesario)
+        val dialogWindow = alertDialog.window
+        dialogWindow?.setBackgroundDrawableResource(R.color.white) // Reemplaza con tu color deseado
+    }
+
+    private fun handleInput(qrResult: String, name: String) {
+        // Manejar los valores aquí
+        if (dbHelper.insertAntenna(qrResult, name, "100%")) {
+            // Preparar el intent para la actividad MainMenu
+            val intent = Intent(this, MainMenu::class.java).apply {
+                putExtra("notification_message", "Antenna : $name Successfully registered!")
+            }
+            startActivity(intent)
+            finish() // Opcional: Terminar la actividad actual si ya no es necesaria
+        } else {
+            // Manejar el caso en que la inserción falló
+        }
+    }
+
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 1
     }
 }
+
+

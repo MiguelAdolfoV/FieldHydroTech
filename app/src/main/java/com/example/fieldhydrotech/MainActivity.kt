@@ -12,12 +12,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.fieldhydrotech.repo.DatabaseHelper
-import com.example.fieldhydrotech.repo.TestDataInserter
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
-    private lateinit var testDataInserter: TestDataInserter
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         dbHelper = DatabaseHelper(this)
+        dbHelper.truncateTables()  // Borra las tablas, si no es necesario, puedes eliminar esta línea
 
         val imageView = findViewById<ImageView>(R.id.mainLogoImageView)
 
@@ -43,11 +42,19 @@ class MainActivity : AppCompatActivity() {
             override fun onAnimationStart(animation: Animator) {}
 
             override fun onAnimationEnd(animation: Animator) {
-                // Realizar las operaciones de base de datos en un hilo separado
-                val intent = Intent(this@MainActivity, EmptyMenu::class.java)
+                // Verificar si hay datos en la tabla Antennas
+                val hasData = dbHelper.getAllMacAddresses().isNotEmpty()
+
+                // Redirigir a la actividad correspondiente
+                val intent = if (hasData) {
+                    Intent(this@MainActivity, MainMenu::class.java)
+                } else {
+                    Intent(this@MainActivity, EmptyMenu::class.java)
+                }
+
                 startActivity(intent)
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                finish()
+                finish()  // Cierra MainActivity para que no quede en el back stack
             }
 
             override fun onAnimationCancel(animation: Animator) {}

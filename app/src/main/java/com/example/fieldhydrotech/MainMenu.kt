@@ -2,9 +2,12 @@ package com.example.fieldhydrotech
 
 import AntennaAdapter
 import MqttHelper
+import Notification
+import NotificationManager
 import WeatherIconUtils
 import WeatherUtils
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -13,22 +16,27 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fieldhydrotech.repo.DatabaseHelper
 import com.example.fieldhydrotech.utils.ChartUtils
 import com.example.fieldhydrotech.utils.NotificationUtils
 import com.example.fieldhydrotech.repo.TestDataInserter
+import com.example.fieldhydrotech.utils.QRCodeScannerUtils
 import com.github.mikephil.charting.charts.BarChart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,8 +59,11 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
     private lateinit var mqttHelper: MqttHelper
     private lateinit var recyclerView: RecyclerView
     private lateinit var antennaAdapter: AntennaAdapter
+    private lateinit var notificationManager: NotificationManager
+    private lateinit var notificationContainer: LinearLayout
+    private var qrResult: String? = null
 
-    // Weather components
+
     private lateinit var weatherTextView: TextView
     private lateinit var weatherImageView: ImageView
     private lateinit var weatherUtil: WeatherUtils
@@ -98,6 +109,8 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         chartUtils = ChartUtils(this, dbHelper)
         notificationUtils = NotificationUtils()
         testDataInserter = TestDataInserter(dbHelper)
+        notificationContainer = findViewById(R.id.notification_container)
+        notificationManager = NotificationManager(this, notificationContainer)
 
         // Weather components
         weatherTextView = findViewById(R.id.weather_text_view)
@@ -107,6 +120,14 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         // Iniciar el servicio MQTT y establecer el listener
         mqttHelper = MqttHelper(this, dbHelper).apply {
             setMqttDataListener(this@MainMenu)
+        }
+
+        // Obtener el mensaje de notificación del Intent
+        val notificationMessage = intent.getStringExtra("notification_message")
+
+        // Si hay un mensaje de notificación, agregarlo
+        notificationMessage?.let {
+            notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, it))
         }
 
         // Configurar RecyclerView y Adapter
@@ -130,12 +151,11 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         }
 
         notificationButton.setOnClickListener {
-            // Acción al hacer clic en el botón de notificaciones
-            notificationUtils.updateNotificationCount(notificationBadge)
+            toggleDrawer()
         }
 
         addButton.setOnClickListener {
-            temporal++
+            QRCodeScannerUtils.startQRScanner(this)
         }
 
         // Cargar datos en el RecyclerView
@@ -147,6 +167,16 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         // Check and update weather
         checkLocationPermission()
         handler.post(weatherUpdateRunnable)
+    }
+
+    private fun toggleDrawer() {
+        val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
+        val drawerView = findViewById<View>(R.id.notification_drawer)
+        if (drawer.isDrawerOpen(drawerView)) {
+            drawer.closeDrawer(drawerView)
+        } else {
+            drawer.openDrawer(drawerView)
+        }
     }
 
     private fun checkLocationPermission() {
@@ -177,6 +207,59 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
             }
         }
     }
+
+    private fun handleInput(qrResult: String, name: String) {
+        if (dbHelper.insertAntenna(qrResult, name, "100%")) {
+            notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, "Antenna : $name Successfully registered"))
+        } else {
+            notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid_warning, "Antenna: $name Not Registered"))
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        QRCodeScannerUtils.handleActivityResult(requestCode, resultCode, data) { qrContent ->
+            if (qrContent != null) {
+                // Guardar el resultado del QR
+                qrResult = qrContent
+                // Mostrar el diálogo de entrada
+                showInputDialog()
+            } else {
+                Log.d("QRCodeScanner", "QR scan cancelled or failed.")
+            }
+        }
+    }
+
+    private fun showInputDialog() {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_input, null)
+        builder.setView(dialogView)
+
+        val alertDialog = builder.create()
+        alertDialog.show()
+
+        val saveButton = dialogView.findViewById<Button>(R.id.buttonSave)
+        val cancelButton = dialogView.findViewById<Button>(R.id.buttonCancel)
+
+        saveButton.setOnClickListener {
+            val editText = dialogView.findViewById<EditText>(R.id.editTextInput)
+            val inputValue = editText.text.toString()
+            qrResult?.let { qr ->
+                handleInput(qr, inputValue)
+            }
+            alertDialog.dismiss()
+        }
+
+        cancelButton.setOnClickListener {
+            alertDialog.dismiss()
+        }
+
+        val dialogWindow = alertDialog.window
+        dialogWindow?.setBackgroundDrawableResource(R.color.white) // Reemplaza con tu color deseado
+    }
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadRecyclerViewData() {

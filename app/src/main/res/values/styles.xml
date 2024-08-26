@@ -1,6 +1,16 @@
 <resources>
-    <!-- Define el color personalizado de la ProgressBar -->
     <style name="CustomProgressBar" parent="Widget.AppCompat.ProgressBar">
         <item name="android:indeterminateTint">@color/primary_color</item>
     </style>
+
+    <style name="CustomAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/white</item>
+        <item name="editTextColor">@color/text_color</item>
+        <item name="android:titleTextStyle">@style/CustomAlertDialogTitle</item>
+    </style>
+
+    <style name="CustomAlertDialogTitle">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
 </resources>

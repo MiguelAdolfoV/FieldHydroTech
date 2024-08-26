@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FieldHydroTech</string>
+    <string name="title_activity_portrait_capture">PortraitCaptureActivity</string>
 </resources>
