@@ -1,3 +1,4 @@
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
@@ -21,6 +22,7 @@ class AntennaAdapter(
     override fun onBindViewHolder(holder: AntennaViewHolder, position: Int) {
         val antenna = antennaList[position]
         holder.antennaTitle.text = antenna.name
+        updateBatteryIcon(holder, antenna.batteryLife.toInt()) // Asegúrate de pasar un valor entero
 
         // Obtener solo los últimos 10 registros
         val logsToDisplay = if (antenna.logs.size > 10) {
@@ -67,5 +69,23 @@ class AntennaAdapter(
         antennaList.clear() // Limpiar la lista actual
         antennaList.addAll(newAntennaList) // Agregar los nuevos datos
         notifyDataSetChanged() // Notificar al adaptador que los datos han cambiado
+    }
+
+    // Método para actualizar el icono de batería basado en el additionalValue
+    private fun updateBatteryIcon(holder: AntennaViewHolder, batteryLife: Int) {
+        val drawableRes = if (batteryLife >= 76) {
+            R.drawable.battery_full_solid
+        } else if (batteryLife in 51..75){
+            R.drawable.battery_three_quarters_solid
+        } else if (batteryLife in 26..50){
+            R.drawable.battery_half_solid
+        } else if (batteryLife in 1..25){
+            R.drawable.battery_quarter_solid
+        } else {
+            R.drawable.battery_empty_solid
+        }
+        holder.batteryIcon.setImageDrawable(ResourcesCompat.getDrawable(holder.itemView.resources, drawableRes, null))
+        Log.d("MainMenu", "BaterryIcon Updated")
+
     }
 }

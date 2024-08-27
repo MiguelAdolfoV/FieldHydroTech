@@ -35,4 +35,9 @@ class NotificationManager(private val context: Context, private val container: L
     fun clearNotifications() {
         container.removeAllViews()
     }
+
+    fun hasNotifications(): Boolean {
+        return container.childCount > 0
+    }
+
 }

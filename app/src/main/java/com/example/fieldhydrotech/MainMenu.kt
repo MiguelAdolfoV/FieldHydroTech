@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fieldhydrotech.repo.DatabaseHelper
 import com.example.fieldhydrotech.utils.ChartUtils
-import com.example.fieldhydrotech.utils.NotificationUtils
 import com.example.fieldhydrotech.repo.TestDataInserter
 import com.example.fieldhydrotech.utils.QRCodeScannerUtils
 import com.github.mikephil.charting.charts.BarChart
@@ -54,7 +53,6 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
     private lateinit var weeklyPlaceholder: ProgressBar
     private lateinit var monthlyPlaceholder: ProgressBar
     private lateinit var chartUtils: ChartUtils
-    private lateinit var notificationUtils: NotificationUtils
     private lateinit var testDataInserter: TestDataInserter
     private lateinit var mqttHelper: MqttHelper
     private lateinit var recyclerView: RecyclerView
@@ -65,6 +63,7 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
 
     private lateinit var weatherTextView: TextView
+    private lateinit var notificationBadge: TextView
     private lateinit var weatherImageView: ImageView
     private lateinit var weatherUtil: WeatherUtils
     private val weatherIconUtils = WeatherIconUtils(this)
@@ -107,7 +106,6 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         weeklyPlaceholder = findViewById(R.id.weeklyPlaceholder)
         monthlyPlaceholder = findViewById(R.id.monthlyPlaceholder)
         chartUtils = ChartUtils(this, dbHelper)
-        notificationUtils = NotificationUtils()
         testDataInserter = TestDataInserter(dbHelper)
         notificationContainer = findViewById(R.id.notification_container)
         notificationManager = NotificationManager(this, notificationContainer)
@@ -127,7 +125,7 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
 
         // Si hay un mensaje de notificación, agregarlo
         notificationMessage?.let {
-            notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, it))
+            notificationManager.addNotification(Notification(R.drawable.warning_notification, it))
         }
 
         // Configurar RecyclerView y Adapter
@@ -136,26 +134,52 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
         antennaAdapter = AntennaAdapter(mutableListOf())
         recyclerView.adapter = antennaAdapter
 
+
         // Cargar datos de las gráficas
         loadChartData()
 
         // Inicializar vistas
         val notificationButton = findViewById<Button>(R.id.toolbar_notification_button)
         val addButton = findViewById<Button>(R.id.toolbar_add_button)
-        val notificationBadge = findViewById<TextView>(R.id.toolbar_notification_badge)
-
-        if (notificationBadge.text.toString().toIntOrNull() == 0) {
-            notificationBadge.visibility = View.GONE
-        } else {
-            notificationBadge.visibility = View.VISIBLE
-        }
+        notificationBadge = findViewById(R.id.toolbar_notification_badge)
+        val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
 
         notificationButton.setOnClickListener {
             toggleDrawer()
+
         }
 
         addButton.setOnClickListener {
             QRCodeScannerUtils.startQRScanner(this)
+        }
+
+        drawer.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+            }
+
+            override fun onDrawerOpened(drawerView: View) {
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                if (notificationManager.hasNotifications()) {
+                    // Hay notificaciones en el drawer
+                    notificationBadge.visibility = View.VISIBLE
+                } else {
+                    // No hay notificaciones en el drawer
+                    notificationBadge.visibility = View.GONE
+                }
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {
+            }
+        })
+
+        if (notificationManager.hasNotifications()) {
+            // Hay notificaciones en el drawer
+            notificationBadge.visibility = View.VISIBLE
+        } else {
+            // No hay notificaciones en el drawer
+            notificationBadge.visibility = View.GONE
         }
 
         // Cargar datos en el RecyclerView
@@ -209,11 +233,21 @@ class MainMenu : AppCompatActivity(), MqttHelper.MqttDataListener {
     }
 
     private fun handleInput(qrResult: String, name: String) {
-        if (dbHelper.insertAntenna(qrResult, name, "100%")) {
+        if (dbHelper.insertAntenna(qrResult, name, 100)) {
             notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, "Antenna : $name Successfully registered"))
         } else {
             notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid_warning, "Antenna: $name Not Registered"))
         }
+        notificationBadge = findViewById(R.id.toolbar_notification_badge)
+
+        if (notificationManager.hasNotifications()) {
+            // Hay notificaciones en el drawer
+            notificationBadge.visibility = View.VISIBLE
+        } else {
+            // No hay notificaciones en el drawer
+            notificationBadge.visibility = View.GONE
+        }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

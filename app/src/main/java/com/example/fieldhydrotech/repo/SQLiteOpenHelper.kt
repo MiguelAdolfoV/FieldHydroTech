@@ -43,7 +43,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             "CREATE TABLE $TABLE_ANTENNAS (" +
                     "$COLUMN_ANTENNAS_MAC_ADDRESS VARCHAR UNIQUE PRIMARY KEY, " +
                     "$COLUMN_ANTENNAS_NAME VARCHAR, " +
-                    "$COLUMN_ANTENNAS_BATTERY_LIFE VARCHAR)"
+                    "$COLUMN_ANTENNAS_BATTERY_LIFE INTEGER)"
 
         private const val CREATE_TABLE_NOTIFICATIONS =
             "CREATE TABLE $TABLE_NOTIFICATIONS (" +
@@ -93,7 +93,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     // CRUD Operations for Antennas table
-    fun insertAntenna(macAddress: String, name: String, batteryLife: String): Boolean {
+    fun insertAntenna(macAddress: String, name: String, batteryLife: Int): Boolean {
         writableDatabase.use { db ->
             val contentValues = ContentValues().apply {
                 put(COLUMN_ANTENNAS_MAC_ADDRESS, macAddress)
@@ -204,7 +204,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             do {
                 val macAddress = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ANTENNAS_MAC_ADDRESS))
                 val name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ANTENNAS_NAME))
-                val batteryLife = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ANTENNAS_BATTERY_LIFE))
+                val batteryLife = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ANTENNAS_BATTERY_LIFE))
 
                 val logsCursor = db.rawQuery("SELECT * FROM $TABLE_LOG WHERE $COLUMN_LOG_ANTENNA_MAC_ADDRESS = ?", arrayOf(macAddress))
                 val logs = mutableListOf<LogEntry>()
@@ -224,12 +224,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return antennas
     }
 
+    fun updateBatteryLife(macAddress: String, additionalValue: Int): Boolean {
+        writableDatabase.use { db ->
+            val contentValues = ContentValues().apply {
+                put(COLUMN_ANTENNAS_BATTERY_LIFE, additionalValue)
+            }
+            val result = db.update(
+                TABLE_ANTENNAS,
+                contentValues,
+                "$COLUMN_ANTENNAS_MAC_ADDRESS = ?",
+                arrayOf(macAddress)
+            )
+            return result > 0
+        }
+    }
+
 }
 
 data class Antenna(
     val macAddress: String,
     val name: String,
-    val batteryLife: String,
+    val batteryLife: Int,
     val logs: List<LogEntry>
 )
 

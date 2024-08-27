@@ -50,7 +50,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:backgroundTint="#0F2E2F"
-                            app:cardCornerRadius="20dp">
+                            app:cardCornerRadius="20dp"
+                            android:layout_marginEnd="10dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -127,7 +128,7 @@
                                 android:layout_height="20dp"
                                 android:background="@drawable/badge_background"
                                 android:textColor="@color/white"
-                                android:text="0"
+                                android:text=" "
                                 android:textSize="10dp"
                                 android:gravity="center"
                                 android:layout_alignParentBottom="true"

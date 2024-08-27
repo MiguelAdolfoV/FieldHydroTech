@@ -100,6 +100,7 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun handleMessage(payload: String) {
+        // Procesar el payload
         val jsonnedMsg = JSONObject(payload)
         val baseStations = jsonnedMsg.getJSONArray("baseStations").getJSONObject(0)
         val bsEui = baseStations.getLong("bsEui")
@@ -107,8 +108,13 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
         val cnt = jsonnedMsg.getInt("cnt")
         val dataArray = jsonnedMsg.getJSONArray("data")
 
-        // Convertir el array de valores ASCII a un número
-        val dataValue = convertAsciiArrayToNumber(dataArray)
+        // Convertir el array de valores ASCII a un string
+        val dataValueString = convertAsciiArrayToString(dataArray)
+
+        // Dividir el string de datos en dos partes
+        val parts = dataValueString.split(",")
+        val dataValue = parts.getOrNull(0)?.toInt() ?: 0
+        val additionalValue = parts.getOrNull(1)?.toInt() ?: 0
 
         // Convertir bsEui a una dirección MAC
         val macAddress = convertBsEuiToMac(bsEui)
@@ -117,7 +123,7 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
         val dateTime = convertNanoTimeToDate(rxTime)
 
         // Mostrar el log con la dirección MAC del dispositivo y la fecha y hora legible
-        Log.d("Mqtt", "Received message from MAC: $macAddress, rxTime: $dateTime, count: $cnt, data: $dataValue")
+        Log.d("Mqtt", "Received message from MAC: $macAddress, rxTime: $dateTime, count: $cnt, data: $dataValue, additional: $additionalValue")
 
         // Obtener todas las direcciones MAC de la base de datos
         val registeredMacAddresses = dbHelper.getAllMacAddresses()
@@ -128,7 +134,14 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
             // Insertar el valor convertido de data en la base de datos
             val success = dbHelper.insertLog(macAddress, dateTime, dataValue)
             if (success) {
-                Log.d("Mqtt", "Data Saved: $dataValue")
+                // Actualizar el valor de battery_life en la base de datos
+                val batteryLifeUpdateSuccess = dbHelper.updateBatteryLife(macAddress, additionalValue)
+                if (batteryLifeUpdateSuccess) {
+                    Log.d("Mqtt", "Battery Life Updated: $additionalValue")
+                } else {
+                    Log.d("Mqtt", "Failed to Update Battery Life")
+                }
+                Log.d("Mqtt", "Data Saved: $dataValue, Additional: $additionalValue")
                 mqttDataListener?.onDataReceived() // Notificar que se han guardado nuevos datos
             } else {
                 Log.d("Mqtt", "Data Error: $dataValue")
@@ -136,6 +149,14 @@ class MqttHelper(context: Context, private val dbHelper: DatabaseHelper) {
         }
     }
 
+    private fun convertAsciiArrayToString(dataArray: JSONArray): String {
+        val stringBuilder = StringBuilder()
+        for (i in 0 until dataArray.length()) {
+            val asciiValue = dataArray.getInt(i)
+            stringBuilder.append(asciiValue.toChar())
+        }
+        return stringBuilder.toString()
+    }
     private fun convertBsEuiToMac(bsEui: Long): String {
         return String.format(
             "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",

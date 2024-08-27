@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         dbHelper = DatabaseHelper(this)
-        dbHelper.truncateTables()  // Borra las tablas, si no es necesario, puedes eliminar esta línea
+//        dbHelper.truncateTables()  // Borra las tablas, si no es necesario, puedes eliminar esta línea
 
         val imageView = findViewById<ImageView>(R.id.mainLogoImageView)
 

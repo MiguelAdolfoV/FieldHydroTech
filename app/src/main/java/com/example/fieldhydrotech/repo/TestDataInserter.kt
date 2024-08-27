@@ -12,11 +12,11 @@ class TestDataInserter(private val dbHelper: DatabaseHelper) {
         dbHelper.dropAndRecreateDatabase()
 
         val antennasData = listOf(
-            Triple("70:B3:D5:67:70:FF:FF:21", "Antenna 1", "75%"),  // MAC verdadera
-            Triple("00:11:22:33:44:56", "Antenna 2", "80%"),
-            Triple("00:11:22:33:44:57", "Antenna 3", "90%"),
-            Triple("00:11:22:33:44:58", "Antenna 4", "60%"),
-            Triple("00:11:22:33:44:59", "Antenna 5", "50%")
+            Triple("70:B3:D5:67:70:FF:FF:21", "Antenna 1", 100),  // MAC verdadera
+            Triple("00:11:22:33:44:56", "Antenna 2", 100),
+            Triple("00:11:22:33:44:57", "Antenna 3", 100),
+            Triple("00:11:22:33:44:58", "Antenna 4", 100),
+            Triple("00:11:22:33:44:59", "Antenna 5", 100)
         )
 
         antennasData.forEach {

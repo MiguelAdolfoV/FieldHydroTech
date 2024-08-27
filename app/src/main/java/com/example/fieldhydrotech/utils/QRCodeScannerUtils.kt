@@ -10,7 +10,7 @@ object QRCodeScannerUtils {
     fun startQRScanner(activity: Activity) {
         val integrator = IntentIntegrator(activity)
         integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE) // Establece que solo se escanearán códigos QR
-        integrator.setPrompt("Scan a QR Code")
+        integrator.setPrompt("Scan The QR of your SmartSensor")
         integrator.setBeepEnabled(true)
         integrator.setOrientationLocked(true)
         integrator.setCaptureActivity(PortraitCaptureActivity::class.java) // Usar la actividad personalizada

@@ -87,21 +87,9 @@ class EmptyMenu : AppCompatActivity() {
             toggleDrawer()
         }
 
-        createNotifications()
-
         checkLocationPermission()
 
         handler.post(weatherUpdateRunnable)
-    }
-
-    private fun createNotifications() {
-        notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid, "Antenna Successfully registered"))
-        notificationManager.addNotification(Notification(R.drawable.plant_flooded_solid, "Saturated Soil"))
-        notificationManager.addNotification(Notification(R.drawable.plant_dry_solid, "Dry Soil"))
-        notificationManager.addNotification(Notification(R.drawable.battery_quarter_solid, "Low Battery"))
-        notificationManager.addNotification(Notification(R.drawable.rain_notification, "Rain Warning"))
-        notificationManager.addNotification(Notification(R.drawable.warning_notification, "Weather Warning"))
-        notificationManager.addNotification(Notification(R.drawable.tower_broadcast_solid_warning, "Antenna Previously Registered"))
     }
 
     private fun toggleDrawer() {
@@ -219,7 +207,7 @@ class EmptyMenu : AppCompatActivity() {
 
     private fun handleInput(qrResult: String, name: String) {
         // Manejar los valores aquí
-        if (dbHelper.insertAntenna(qrResult, name, "100%")) {
+        if (dbHelper.insertAntenna(qrResult, name, 100)) {
             // Preparar el intent para la actividad MainMenu
             val intent = Intent(this, MainMenu::class.java).apply {
                 putExtra("notification_message", "Antenna : $name Successfully registered!")
